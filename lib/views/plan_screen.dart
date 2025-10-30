@@ -1,4 +1,5 @@
 import '../models/data_layer.dart';
+import '../provider/plan_provider.dart';
 import 'package:flutter/material.dart';
 
 class PlanScreen extends StatefulWidget {
@@ -9,10 +10,8 @@ class PlanScreen extends StatefulWidget {
 }
 
 class _PlanScreenState extends State<PlanScreen> {
-  Plan plan = const Plan();
   late ScrollController scrollController;
 
-  // ⬇️ Langkah 11 — Tambah Scroll Listener
   @override
   void initState() {
     super.initState();
@@ -22,7 +21,6 @@ class _PlanScreenState extends State<PlanScreen> {
       });
   }
 
-  // ⬇️ Langkah 13 — Bersihkan controller saat widget dihapus
   @override
   void dispose() {
     scrollController.dispose();
@@ -33,28 +31,45 @@ class _PlanScreenState extends State<PlanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Master Plan Arielreza')),
-      body: _buildList(),
-      floatingActionButton: _buildAddTaskButton(),
+      body: ValueListenableBuilder<Plan>(
+        valueListenable: PlanProvider.of(context),
+        builder: (context, plan, child) {
+          return Column(
+            children: [
+              Expanded(child: _buildList(plan)),
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    plan.completenessMessage,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+      floatingActionButton: _buildAddTaskButton(context),
     );
   }
 
-  // Langkah 7
-  Widget _buildAddTaskButton() {
+  Widget _buildAddTaskButton(BuildContext context) {
+    ValueNotifier<Plan> planNotifier = PlanProvider.of(context);
+
     return FloatingActionButton(
       child: const Icon(Icons.add),
       onPressed: () {
-        setState(() {
-          plan = Plan(
-            name: plan.name,
-            tasks: List<Task>.from(plan.tasks)..add(const Task()),
-          );
-        });
+        Plan currentPlan = planNotifier.value;
+        planNotifier.value = Plan(
+          name: currentPlan.name,
+          tasks: List<Task>.from(currentPlan.tasks)..add(const Task()),
+        );
       },
     );
   }
 
-  // Langkah 12 — Tambah controller & keyboard behavior
-  Widget _buildList() {
+  Widget _buildList(Plan plan) {
     return ListView.builder(
       controller: scrollController,
       keyboardDismissBehavior:
@@ -63,41 +78,40 @@ class _PlanScreenState extends State<PlanScreen> {
               : ScrollViewKeyboardDismissBehavior.manual,
       itemCount: plan.tasks.length,
       itemBuilder: (context, index) =>
-          _buildTaskTile(plan.tasks[index], index), // panggil langkah 9
+          _buildTaskTile(plan.tasks[index], index, context),
     );
   }
 
-  // Langkah 9
-  Widget _buildTaskTile(Task task, int index) {
+  Widget _buildTaskTile(Task task, int index, BuildContext context) {
+    ValueNotifier<Plan> planNotifier = PlanProvider.of(context);
+
     return ListTile(
       leading: Checkbox(
         value: task.complete,
         onChanged: (selected) {
-          setState(() {
-            plan = Plan(
-              name: plan.name,
-              tasks: List<Task>.from(plan.tasks)
-                ..[index] = Task(
-                  description: task.description,
-                  complete: selected ?? false,
-                ),
-            );
-          });
+          Plan currentPlan = planNotifier.value;
+          planNotifier.value = Plan(
+            name: currentPlan.name,
+            tasks: List<Task>.from(currentPlan.tasks)
+              ..[index] = Task(
+                description: task.description,
+                complete: selected ?? false,
+              ),
+          );
         },
       ),
       title: TextFormField(
         initialValue: task.description,
         onChanged: (text) {
-          setState(() {
-            plan = Plan(
-              name: plan.name,
-              tasks: List<Task>.from(plan.tasks)
-                ..[index] = Task(
-                  description: text,
-                  complete: task.complete,
-                ),
-            );
-          });
+          Plan currentPlan = planNotifier.value;
+          planNotifier.value = Plan(
+            name: currentPlan.name,
+            tasks: List<Task>.from(currentPlan.tasks)
+              ..[index] = Task(
+                description: text,
+                complete: task.complete,
+              ),
+          );
         },
       ),
     );
