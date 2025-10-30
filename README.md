@@ -68,8 +68,7 @@ Setiap item terdiri dari:
 - **TextFormField** untuk menulis atau mengubah deskripsi task.
 
 Contoh tampilan:
-> (Masukkan GIF hasil langkah 9 di sini)  
-> Misalnya: `![Langkah 9](assets/langkah9_tasktile.gif)`
+> Misalnya: ![Langkah 9](assets/images/ss2.jpeg)
 
 Kode utamanya:
 ```dart
